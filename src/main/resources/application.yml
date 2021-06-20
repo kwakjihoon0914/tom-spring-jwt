@@ -1,0 +1,40 @@
+
+# better readable jackson serialization format
+spring:
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+
+  datasource:
+    hikari:
+      username: sa
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+
+  h2:
+    console:
+      URL: jdbc:h2:mem:testdb
+      enabled: true
+
+
+  devtools:
+    restart:
+      enabled: true
+
+jwt:
+  expiration: 3600000
+  authorization:
+    header: Authorization
+  secret:
+    key: ZmQ0ZGI5NjQ0MDQwY2I4MjMxY2Y3ZmI3MjdhN2ZmMjNhODViOTg1ZGE0NTBjMGM4NDA5NzYxMjdjOWMwYWRmZTBlZjlhNGY3ZTg4Y2U3YTE1ODVkZDU5Y2Y3OGYwZWE1NzUzNWQ2YjFjZDc0NGMxZWU2MmQ3MjY1NzJmNTE0MzI=
+
+
+logging:
+  level:
+    com.tom.spring.jwt: DEBUG
+    #org.springframework.security: DEBUG
