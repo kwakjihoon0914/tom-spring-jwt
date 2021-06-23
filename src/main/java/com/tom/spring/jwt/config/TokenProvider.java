@@ -2,6 +2,7 @@ package com.tom.spring.jwt.config;
 
 
 import com.tom.spring.jwt.security.authentication.SignedUser;
+import com.tom.spring.jwt.security.config.AuthorityType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -20,12 +21,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+
+//https://developer.okta.com/blog/2018/10/31/jwts-with-java
 @Slf4j
 @Component
 public class TokenProvider implements InitializingBean {
-
     private static final String AUTHORITIES_KEY = "auth";
-    private static final String USER_ID_KEY = "user_id";
+    private static final String ADMIN_KEY = "admin";
+    private static final String ISSUED_AT_KEY = "iat";
     private Key key;
 
     @Value("${jwt.secret.key}")
@@ -49,7 +52,7 @@ public class TokenProvider implements InitializingBean {
                 Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
-        Long userId = ((Number) claims.get(USER_ID_KEY)).longValue();
+        Long userId = Long.valueOf(claims.getSubject());
 
         SignedUser principal = new SignedUser(userId,claims.getSubject(), "", authorities);
 
@@ -59,6 +62,9 @@ public class TokenProvider implements InitializingBean {
     public String createToken(Authentication authentication) {
 
         Long userId = ((SignedUser) authentication.getPrincipal()).getId();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(AuthorityType.ROLE_ADMIN.name()::equals);
 
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -68,19 +74,20 @@ public class TokenProvider implements InitializingBean {
         Date validity  = new Date(now + this.tokenExpiration);
 
         return Jwts.builder()
-                .setSubject(authentication.getName())
+                .setSubject(userId.toString())
+
                 .claim(AUTHORITIES_KEY, authorities)
-                .claim(USER_ID_KEY,userId)
+                .claim(ADMIN_KEY,isAdmin)
+                .claim(ISSUED_AT_KEY,now)
+
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();
     }
 
-
     public boolean validateToken(String authToken) {
 
         try {
-
             Jwts.parser().setSigningKey(key).parseClaimsJws(authToken);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {

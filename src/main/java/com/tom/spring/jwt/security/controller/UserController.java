@@ -12,16 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collection;
 
 @RestController
-@RequestMapping("/api")
 @AllArgsConstructor
+@RequestMapping("/api")
 public class UserController {
 
    private final UserServiceImpl userService;
 
    @GetMapping("/users/me")
-   public ResponseEntity<User> getActualUser() {
-      return ResponseEntity.ok(userService.getCurrentUser());
-   }
+   public ResponseEntity<User> getActualUser() { return ResponseEntity.ok(userService.getCurrentUser()); }
 
    @GetMapping("/users/authority")
    public ResponseEntity<Collection<User>> getUsersByAuthority() {

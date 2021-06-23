@@ -14,6 +14,7 @@ public class SignedUser extends User {
 
     private Long id;
 
+
     public SignedUser(Long id,String username, String password, Collection<? extends GrantedAuthority> authorities){
         super(username, password, authorities);
         this.id = id;
