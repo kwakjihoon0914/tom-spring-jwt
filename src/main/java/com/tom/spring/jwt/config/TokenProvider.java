@@ -1,7 +1,7 @@
 package com.tom.spring.jwt.config;
 
 
-import com.tom.spring.jwt.security.authentication.SignedUser;
+import com.tom.spring.jwt.security.authentication.AuthenticatedUser;
 import com.tom.spring.jwt.security.config.AuthorityType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -54,14 +54,14 @@ public class TokenProvider implements InitializingBean {
                         .collect(Collectors.toList());
         Long userId = Long.valueOf(claims.getSubject());
 
-        SignedUser principal = new SignedUser(userId,claims.getSubject(), "", authorities);
+        AuthenticatedUser principal = new AuthenticatedUser(userId,claims.getSubject(), "", authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
     public String createToken(Authentication authentication) {
 
-        Long userId = ((SignedUser) authentication.getPrincipal()).getId();
+        Long authenticatedUserId = ((AuthenticatedUser) authentication.getPrincipal()).getId();
         boolean isAdmin = authentication.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .anyMatch(AuthorityType.ROLE_ADMIN.name()::equals);
@@ -74,7 +74,7 @@ public class TokenProvider implements InitializingBean {
         Date validity  = new Date(now + this.tokenExpiration);
 
         return Jwts.builder()
-                .setSubject(userId.toString())
+                .setSubject(authenticatedUserId.toString())
 
                 .claim(AUTHORITIES_KEY, authorities)
                 .claim(ADMIN_KEY,isAdmin)

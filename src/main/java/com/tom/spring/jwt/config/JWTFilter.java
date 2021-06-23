@@ -33,11 +33,12 @@ public class JWTFilter extends GenericFilterBean {
 
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-        String token = resolveToken(httpServletRequest);
+        String accessToken = resolveToken(httpServletRequest);
         String requestURI = httpServletRequest.getRequestURI();
 
-        if (StringUtils.hasText(token) && tokenProvider.validateToken(token)){
-            Authentication authentication = tokenProvider.getAuthentication(token);
+
+        if (StringUtils.hasText(accessToken) && tokenProvider.validateToken(accessToken)){
+            Authentication authentication = tokenProvider.getAuthentication(accessToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
@@ -45,7 +46,7 @@ public class JWTFilter extends GenericFilterBean {
 
     }
 
-    private String resolveToken(HttpServletRequest request) {
+    public static String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(AUTHORIZATION_TOKEN_PREFIX)) {
             return bearerToken.substring(7);

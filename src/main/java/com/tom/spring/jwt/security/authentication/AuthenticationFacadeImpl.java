@@ -10,13 +10,13 @@ import java.util.Optional;
 @Component
 public class AuthenticationFacadeImpl implements AuthenticationFacade {
     @Override
-    public Optional<SignedUser> getSignedUser(){
+    public Optional<AuthenticatedUser> getSignedUser(){
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) return Optional.empty();
 
-        SignedUser currentSignedUser = (SignedUser) authentication.getPrincipal();
-        return Optional.ofNullable(currentSignedUser);
+        AuthenticatedUser currentAuthenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
+        return Optional.ofNullable(currentAuthenticatedUser);
     }
 
     @Override

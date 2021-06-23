@@ -4,11 +4,10 @@ package com.tom.spring.jwt.security.controller;
 import com.tom.spring.jwt.config.JWTFilter;
 import com.tom.spring.jwt.config.TokenProvider;
 import com.tom.spring.jwt.security.authentication.AuthenticationFacade;
-import com.tom.spring.jwt.security.authentication.SignedUser;
 import com.tom.spring.jwt.security.dto.request.TokenRefreshDto;
 import com.tom.spring.jwt.security.dto.response.TokenDto;
 import com.tom.spring.jwt.security.dto.request.LoginDto;
-import com.tom.spring.jwt.security.service.RefreshTokenService;
+import com.tom.spring.jwt.security.service.TokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -21,18 +20,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.security.Principal;
 
 @Slf4j
 @AllArgsConstructor
 @RestController
 public class AuthenticationController {
 
-    private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-    private final RefreshTokenService refreshTokenService;
-    private final AuthenticationFacade authenticationFacade;
+    private final TokenService tokenService;
 
     @PostMapping("/authenticate")
     public ResponseEntity<TokenDto> authorize(@Valid @RequestBody LoginDto loginDto) {
@@ -43,36 +40,31 @@ public class AuthenticationController {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        Long userId = authenticationFacade.getSignedUser().get().getId();
 
-        String jwt = tokenProvider.createToken(authentication);
-        String refreshToken = refreshTokenService.createRefreshToken(userId).getToken();
+        TokenDto tokenDto = tokenService.createToken();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, JWTFilter.AUTHORIZATION_TOKEN_PREFIX + jwt);
+        httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, JWTFilter.AUTHORIZATION_TOKEN_PREFIX + tokenDto.getAccessToken());
 
         return ResponseEntity.ok()
                         .headers(httpHeaders)
-                        .body(new TokenDto(jwt,refreshToken));
+                        .body(tokenDto);
     }
 
 
     @PostMapping("/refreshtoken")
-    public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshDto tokenRefreshDto) {
+    public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshDto tokenRefreshDto, HttpServletRequest request) {
+        String accessToken =  JWTFilter.resolveToken(request);
         String refreshToken = tokenRefreshDto.getRefreshToken();
 
-        return null;
-        /*return refreshTokenService.findByToken(requestRefreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String token = jwtUtils.generateTokenFromUsername(user.getUsername());
-                    return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
-                })
-                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
-                        "Refresh token is not in database!"));
+        TokenDto tokenDto = tokenService.createUpdatedToken(accessToken,refreshToken);
 
-         */
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, JWTFilter.AUTHORIZATION_TOKEN_PREFIX + tokenDto.getAccessToken());
+
+        return ResponseEntity.ok()
+                .headers(httpHeaders)
+                .body(tokenDto);
     }
 
 }
