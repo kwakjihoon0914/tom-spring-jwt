@@ -2,6 +2,7 @@ package com.tom.spring.jwt.security.controller;
 
 
 import com.tom.spring.jwt.config.JWTFilter;
+import com.tom.spring.jwt.config.JWTUtils;
 import com.tom.spring.jwt.config.TokenProvider;
 import com.tom.spring.jwt.security.authentication.AuthenticationFacade;
 import com.tom.spring.jwt.security.dto.request.TokenRefreshDto;
@@ -44,7 +45,7 @@ public class AuthenticationController {
         TokenDto tokenDto = tokenService.createToken();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, JWTFilter.AUTHORIZATION_TOKEN_PREFIX + tokenDto.getAccessToken());
+        httpHeaders.add(JWTUtils.AUTHORIZATION_HEADER, JWTUtils.AUTHORIZATION_TOKEN_PREFIX + tokenDto.getAccessToken());
 
         return ResponseEntity.ok()
                         .headers(httpHeaders)
@@ -54,13 +55,13 @@ public class AuthenticationController {
 
     @PostMapping("/refreshtoken")
     public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshDto tokenRefreshDto, HttpServletRequest request) {
-        String accessToken =  JWTFilter.resolveToken(request);
+        String accessToken =  JWTUtils.resolveToken(request);
         String refreshToken = tokenRefreshDto.getRefreshToken();
 
         TokenDto tokenDto = tokenService.createUpdatedToken(accessToken,refreshToken);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, JWTFilter.AUTHORIZATION_TOKEN_PREFIX + tokenDto.getAccessToken());
+        httpHeaders.add(JWTUtils.AUTHORIZATION_HEADER, JWTUtils.AUTHORIZATION_TOKEN_PREFIX + tokenDto.getAccessToken());
 
         return ResponseEntity.ok()
                 .headers(httpHeaders)

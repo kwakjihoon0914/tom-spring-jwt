@@ -20,8 +20,7 @@ import java.util.function.Predicate;
 @Slf4j
 public class JWTFilter extends GenericFilterBean {
 
-    public final static String AUTHORIZATION_HEADER = "Authorization";
-    public final static String AUTHORIZATION_TOKEN_PREFIX = "Bearer ";
+
     private final TokenProvider tokenProvider;
 
     public JWTFilter(TokenProvider tokenProvider){
@@ -33,7 +32,7 @@ public class JWTFilter extends GenericFilterBean {
 
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-        String accessToken = resolveToken(httpServletRequest);
+        String accessToken = JWTUtils.resolveToken(httpServletRequest);
         String requestURI = httpServletRequest.getRequestURI();
 
 
@@ -46,11 +45,5 @@ public class JWTFilter extends GenericFilterBean {
 
     }
 
-    public static String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(AUTHORIZATION_TOKEN_PREFIX)) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
+
 }
