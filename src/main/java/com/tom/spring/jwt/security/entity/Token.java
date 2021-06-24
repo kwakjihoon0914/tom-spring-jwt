@@ -3,12 +3,14 @@ package com.tom.spring.jwt.security.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.time.Instant;
 
 @Entity
 @Getter @Setter
+@DynamicUpdate
 @Table(name = "TOKEN")
 public class Token {
 
@@ -17,7 +19,7 @@ public class Token {
     @SequenceGenerator(name = "TOKEN_SEQ", sequenceName = "TOKEN_SEQ", allocationSize = 1)
     private long id;
 
-    @OneToOne
+    @OneToOne(optional = false,fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID", referencedColumnName = "id")
     private User user;
 

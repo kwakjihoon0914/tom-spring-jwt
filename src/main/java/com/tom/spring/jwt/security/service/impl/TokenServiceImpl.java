@@ -5,6 +5,9 @@ import com.tom.spring.jwt.security.authentication.AuthenticationFacade;
 import com.tom.spring.jwt.security.dto.response.TokenDto;
 import com.tom.spring.jwt.security.entity.Token;
 import com.tom.spring.jwt.security.entity.User;
+import com.tom.spring.jwt.security.exception.TokenException;
+import com.tom.spring.jwt.security.exception.TokenExpiredException;
+import com.tom.spring.jwt.security.exception.TokenNotFoundException;
 import com.tom.spring.jwt.security.repository.TokenRepository;
 import com.tom.spring.jwt.security.repository.UserRepository;
 import com.tom.spring.jwt.security.service.TokenService;
@@ -13,7 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -56,7 +61,7 @@ public class TokenServiceImpl implements TokenService {
 
         token = tokenRepository.save(token);
 
-        return new TokenDto(token.getAccessToken(),token.getRefreshToken());
+        return TokenDto.of(token.getAccessToken(),token.getRefreshToken());
     }
 
     @Override
@@ -71,13 +76,19 @@ public class TokenServiceImpl implements TokenService {
         Instant refreshExpiryDate = Instant.now().plusMillis(refreshTokenDuration);
         String refreshToken = createRefreshToken();
 
-        Token token = new Token();
-        token.setUser(user);
-        token.updateToken(accessToken,refreshToken,refreshExpiryDate);
+        Optional<Token> tokenOptional  =tokenRepository.findByUserId(user.getId());
 
+        Token token;
+        if (tokenOptional.isPresent()){
+            token = tokenOptional.get();
+        }else{
+            token = new Token();
+            token.setUser(user);
+        }
+        token.updateToken(accessToken,refreshToken,refreshExpiryDate);
         token = tokenRepository.save(token);
 
-        return new TokenDto(token.getAccessToken(),token.getRefreshToken());
+        return TokenDto.of(token.getAccessToken(),token.getRefreshToken());
     }
 
     private String createRefreshToken(){
@@ -89,16 +100,15 @@ public class TokenServiceImpl implements TokenService {
         Long tokenUserId = token.getUser().getId();
         Long authenticatedUserId = authenticationFacade.getSignedUser().get().getId();
 
-
         if (tokenUserId != authenticatedUserId){
             tokenRepository.deleteByUserId(authenticatedUserId);
             tokenRepository.deleteByUserId(tokenUserId);
-            throw new IllegalStateException( "Refresh token should belong to the authenticator.");
+            throw new TokenException( "Refresh token should belong to the authenticator.");
         }
 
         if (token.getRefreshTokenExpiryDate().compareTo(Instant.now()) < 0) {
             tokenRepository.deleteByUserId(authenticatedUserId);
-            throw new IllegalStateException( "Refresh token was expired. Please make a new signin request");
+            throw new TokenExpiredException( "Refresh token was expired. Please make a new signin request");
         }
     }
 

@@ -16,4 +16,8 @@ public class TokenDto {
         this.refreshToken = refreshToken;
     }
 
+
+    public static TokenDto of(String accessToken,String refreshToken){
+        return  new TokenDto(accessToken,refreshToken);
+    }
 }

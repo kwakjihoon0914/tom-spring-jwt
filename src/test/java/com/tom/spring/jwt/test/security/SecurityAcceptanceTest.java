@@ -39,13 +39,6 @@ public class SecurityAcceptanceTest extends AcceptanceTest {
                         .extract();
 
         TokenDto tokenDto = response.as(TokenDto.class);
-
-        System.out.println("########################");
-        System.out.println("########################");
-        System.out.println(tokenDto);
-        System.out.println("########################");
-        System.out.println("########################");
-
         //assertThat(response.statusCode()).isEqualTo(INTERNAL_SERVER_ERROR.code());
 
 
