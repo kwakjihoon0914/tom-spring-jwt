@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
@@ -20,29 +21,29 @@ import java.util.Locale;
  */
 @Slf4j
 @AllArgsConstructor
-@Component("userDetailsService")
+@Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
    private final UserRepository userRepository;
 
    @Override
    @Transactional
-   public UserDetails loadUserByUsername(final String login) {
+   public UserDetails loadUserByUsername(final String userName) {
 
-      if (new EmailValidator().isValid(login, null)) {
-         return userRepository.findOneWithAuthoritiesByEmailIgnoreCase(login)
-            .map(user -> createSignedUser(login, user))
-            .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
+      if (new EmailValidator().isValid(userName, null)) {
+         return userRepository.findOneWithAuthoritiesByEmailIgnoreCase(userName)
+            .map(user -> createAuthenticatedUser(userName, user))
+            .orElseThrow(() -> new UsernameNotFoundException("User with email " + userName + " was not found in the database"));
       }
 
-      String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
+      String lowercaseLogin = userName.toLowerCase(Locale.ENGLISH);
 
       return userRepository.findOneWithAuthoritiesByUsername(lowercaseLogin)
-         .map(user -> createSignedUser(lowercaseLogin, user))
+         .map(user -> createAuthenticatedUser(lowercaseLogin, user))
          .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
    }
 
-   private AuthenticatedUser createSignedUser(String lowercaseLogin, User user) {
+   private AuthenticatedUser createAuthenticatedUser(String lowercaseLogin, User user) {
 
       if (!user.isActivated()) {
          throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");

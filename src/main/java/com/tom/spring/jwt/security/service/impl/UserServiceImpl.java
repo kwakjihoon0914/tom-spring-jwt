@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
    @Transactional(readOnly = true)
    public User getCurrentUser() {
       return userRepository.findById(
-                  authenticationFacade.getSignedUser().get().getId())
+                  authenticationFacade.getAuthenticatedUser().get().getId())
               .get();
    }
 

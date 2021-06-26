@@ -69,7 +69,7 @@ public class TokenServiceImpl implements TokenService {
     public TokenDto createToken() {
 
         Authentication authentication = authenticationFacade.getAuthentication();
-        Long authenticatedUserId = authenticationFacade.getSignedUser().get().getId();
+        Long authenticatedUserId = authenticationFacade.getAuthenticatedUser().get().getId();
         String accessToken = tokenProvider.createToken(authentication);
 
         User user = userRepository.findById(authenticatedUserId).get();
@@ -98,7 +98,7 @@ public class TokenServiceImpl implements TokenService {
     private void verifyRefresh(Token token) {
 
         Long tokenUserId = token.getUser().getId();
-        Long authenticatedUserId = authenticationFacade.getSignedUser().get().getId();
+        Long authenticatedUserId = authenticationFacade.getAuthenticatedUser().get().getId();
 
         if (tokenUserId != authenticatedUserId){
             tokenRepository.deleteByUserId(authenticatedUserId);

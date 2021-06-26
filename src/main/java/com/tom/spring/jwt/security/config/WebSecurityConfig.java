@@ -5,19 +5,20 @@ import com.tom.spring.jwt.config.JWTConfigurerAdapter;
 import com.tom.spring.jwt.config.JwtAccessDeniedHandler;
 import com.tom.spring.jwt.config.JwtAuthenticationEntryPoint;
 import com.tom.spring.jwt.config.TokenProvider;
-import com.tom.spring.jwt.security.service.impl.UserDetailsServiceImpl;
+import com.tom.spring.jwt.security.authentication.CustomAuthenticationProvider;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
 
@@ -30,10 +31,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final CorsFilter corsFilter;
     private final JwtAuthenticationEntryPoint authenticationErrorHandler;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-
-    private final UserDetailsServiceImpl userDetailService;
-
-
+    private final UserDetailsService userDetailService;
 
     private JWTConfigurerAdapter securityConfigurerAdapter() {
         return new JWTConfigurerAdapter(tokenProvider);
@@ -41,20 +39,20 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
     @Bean
-    public AuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
-        authenticationProvider.setUserDetailsService(userDetailService);
+    public AuthenticationProvider authenticationProvider() {
+        CustomAuthenticationProvider authenticationProvider =
+                        new CustomAuthenticationProvider(passwordEncoder(),userDetailService);
         authenticationProvider.setHideUserNotFoundExceptions(false) ;
+        //authenticationProvider.setMessageSource(new CustomSecurityMessageSource());
+
         return authenticationProvider;
     }
 
-    /*
-    @Bean
+    //@Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    */
+
 
     @Override
     public void configure(WebSecurity web) {
@@ -75,6 +73,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
+
+
 
         httpSecurity
                 // we don't need CSRF because our token is invulnerable

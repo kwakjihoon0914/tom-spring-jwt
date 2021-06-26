@@ -5,7 +5,7 @@ import org.springframework.security.core.Authentication;
 import java.util.Optional;
 
 public interface AuthenticationFacade {
-    Optional<AuthenticatedUser> getSignedUser();
+    Optional<AuthenticatedUser> getAuthenticatedUser();
     Authentication getAuthentication();
 
 }
