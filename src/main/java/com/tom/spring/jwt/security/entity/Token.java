@@ -7,6 +7,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter @Setter
@@ -32,10 +33,10 @@ public class Token {
     private String refreshToken;
 
     @Column(name = "REFRESH_TOKEN_EXPIRY_DATE",nullable = false)
-    private Instant refreshTokenExpiryDate;
+    private LocalDateTime refreshTokenExpiryDate;
 
 
-    public void updateToken(String accessToken,String refreshToken,Instant refreshTokenExpiryDate){
+    public void updateToken(String accessToken,String refreshToken,LocalDateTime refreshTokenExpiryDate){
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.refreshTokenExpiryDate = refreshTokenExpiryDate;

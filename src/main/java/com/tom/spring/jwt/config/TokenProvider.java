@@ -71,14 +71,16 @@ public class TokenProvider implements InitializingBean {
                 .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
+
         Date validity  = new Date(now + this.tokenExpiration);
+        Date iat = new Date(now);
 
         return Jwts.builder()
                 .setSubject(authenticatedUserId.toString())
 
                 .claim(AUTHORITIES_KEY, authorities)
                 .claim(ADMIN_KEY,isAdmin)
-                .claim(ISSUED_AT_KEY,now)
+                .claim(ISSUED_AT_KEY,iat)
 
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)

@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.swing.text.html.Option;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,11 +27,11 @@ import java.util.UUID;
 @Service
 public class TokenServiceImpl implements TokenService {
 
-    private Long refreshTokenDuration;
-    private TokenRepository tokenRepository;
-    private UserRepository userRepository;
-    private TokenProvider tokenProvider;
-    private AuthenticationFacade authenticationFacade;
+    final private Long refreshTokenDuration;
+    final private TokenRepository tokenRepository;
+    final private UserRepository userRepository;
+    final private TokenProvider tokenProvider;
+    final private AuthenticationFacade authenticationFacade;
 
     public TokenServiceImpl(@Value("${jwt.refreshtoken.expiration}") Long refreshTokenDuration,
                             TokenRepository tokenRepository,
@@ -55,13 +57,13 @@ public class TokenServiceImpl implements TokenService {
 
         String newAccessToken = tokenProvider.createToken(authenticationFacade.getAuthentication());
         String newRefreshToken = createRefreshToken();
-        Instant newRefreshExpiryDate = Instant.now().plusMillis(refreshTokenDuration);
+        LocalDateTime newRefreshExpiryDate = LocalDateTime.now().plusSeconds(refreshTokenDuration);
 
         token.updateToken(newAccessToken,newRefreshToken,newRefreshExpiryDate);
 
         token = tokenRepository.save(token);
 
-        return TokenDto.of(token.getAccessToken(),token.getRefreshToken());
+        return TokenDto.of(token);
     }
 
     @Override
@@ -73,7 +75,8 @@ public class TokenServiceImpl implements TokenService {
         String accessToken = tokenProvider.createToken(authentication);
 
         User user = userRepository.findById(authenticatedUserId).get();
-        Instant refreshExpiryDate = Instant.now().plusMillis(refreshTokenDuration);
+        LocalDateTime refreshExpiryDate = LocalDateTime.now().plusSeconds(refreshTokenDuration);
+
         String refreshToken = createRefreshToken();
 
         Optional<Token> tokenOptional  =tokenRepository.findByUserId(user.getId());
@@ -88,7 +91,7 @@ public class TokenServiceImpl implements TokenService {
         token.updateToken(accessToken,refreshToken,refreshExpiryDate);
         token = tokenRepository.save(token);
 
-        return TokenDto.of(token.getAccessToken(),token.getRefreshToken());
+        return TokenDto.of(token);
     }
 
     private String createRefreshToken(){
@@ -106,7 +109,7 @@ public class TokenServiceImpl implements TokenService {
             throw new TokenException( "Refresh token should belong to the authenticator.");
         }
 
-        if (token.getRefreshTokenExpiryDate().compareTo(Instant.now()) < 0) {
+        if (token.getRefreshTokenExpiryDate().compareTo(LocalDateTime.now()) < 0) {
             tokenRepository.deleteByUserId(authenticatedUserId);
             throw new TokenExpiredException( "Refresh token was expired. Please make a new signin request");
         }
